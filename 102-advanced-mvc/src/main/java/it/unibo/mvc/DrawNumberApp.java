@@ -1,24 +1,50 @@
 package it.unibo.mvc;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
  */
 public final class DrawNumberApp implements DrawNumberViewObserver {
-    private static final int MIN = 0;
-    private static final int MAX = 100;
-    private static final int ATTEMPTS = 10;
+    private int min;
+    private int max;
+    private int attempts;
 
     private final DrawNumber model;
     private final List<DrawNumberView> views;
+   
+    private void loadConfiguration() {
+        InputStream config = ClassLoader.getSystemResourceAsStream("config.yml");
+        try(final BufferedReader br = new BufferedReader(new InputStreamReader(config))) {
+            int nProperties = 3;
+            final List<Integer> properties = new ArrayList();
+            for(int i=0;i < nProperties; i++){
+                String line = br.readLine();
+                final String[] lineSplitted = line.split(": ");
+                properties.add(Integer.parseInt(lineSplitted[1]));
+            }
+            min = properties.get(0);
+            max = properties.get(1);
+            attempts = properties.get(2);
+        } catch(IOException e){
+            e.printStackTrace();
+        }
+    }
 
     /**
      * @param views
      *            the views to attach
+     * @throws IOException
      */
-    public DrawNumberApp(final DrawNumberView... views) {
+    public DrawNumberApp(final DrawNumberView... views){
+        loadConfiguration();
+
         /*
          * Side-effect proof
          */
@@ -27,7 +53,7 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
             view.setObserver(this);
             view.start();
         }
-        this.model = new DrawNumberImpl(MIN, MAX, ATTEMPTS);
+        this.model = new DrawNumberImpl(min, max, attempts);
     }
 
     @Override
